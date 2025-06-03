@@ -389,7 +389,7 @@ void dev_coredumpm(struct device *dev, struct module *owner,
 	mutex_lock(&devcd->mutex);
 	devcd->init_completed = false;
 	INIT_DELAYED_WORK(&devcd->del_wk, devcd_del);
-	schedule_delayed_work(&devcd->del_wk, DEVCD_TIMEOUT);
+	queue_delayed_work(system_power_efficient_wq, &devcd->del_wk, DEVCD_TIMEOUT);
 
 	if (device_add(&devcd->devcd_dev))
 		goto put_device;
