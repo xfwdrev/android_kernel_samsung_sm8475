@@ -1995,6 +1995,7 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
 		}
 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
 
+		list_del(&page->lru);
 		SetPageLRU(page);
 		add_page_to_lru_list(page, lruvec);
 
