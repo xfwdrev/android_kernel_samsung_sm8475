@@ -431,6 +431,16 @@ config SEC_SENSORS_SSC
 	  support SEC features for Qualcomm Technologies, Inc SoCs. SSC is used for
 	  exercising sensor use-cases.
 	  Say N if you do not want to support it.
+config QCOM_CRASH_SYMBOL_MATCH
+	bool "Enable symbol matching for crash stack addresses"
+	default n
+	help
+	  Say Y here to enable symbol matching for crash stack addresses
+	  using a symbol map to convert raw addresses into readable symbols.
+
+	  If disabled, only raw stack addresses are printed.
+	  Helps improve clarity and debugging of crash logs.
+
 endif # REMOTEPROC
 
 endmenu

@@ -5,7 +5,7 @@
  * Copyright (C) 2016 Linaro Ltd
  * Copyright (C) 2014 Sony Mobile Communications AB
  * Copyright (c) 2012-2013, 2020-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  */
 
 #include <linux/clk.h>
@@ -60,6 +60,7 @@ static int prox_vdd_reg_idx = -1;
 
 struct adsp_data {
 	int crash_reason_smem;
+	int crash_reason_stack;
 	const char *firmware_name;
 	int pas_id;
 	bool free_after_auth_reset;
@@ -74,6 +75,7 @@ struct adsp_data {
 
 	const char *ssr_name;
 	const char *sysmon_name;
+	unsigned int smem_host_id;
 	const char *qmp_name;
 	int ssctl_id;
 };
@@ -105,6 +107,8 @@ struct qcom_adsp {
 	bool retry_shutdown;
 	struct icc_path *bus_client;
 	int crash_reason_smem;
+	int crash_reason_stack;
+	unsigned int smem_host_id;
 	bool has_aggre2_clk;
 	bool dma_phys_below_32b;
 	const char *info_name;
@@ -1050,6 +1054,7 @@ static int adsp_probe(struct platform_device *pdev)
 	adsp->pas_id = desc->pas_id;
 	adsp->has_aggre2_clk = desc->has_aggre2_clk;
 	adsp->info_name = desc->sysmon_name;
+	adsp->smem_host_id = desc->smem_host_id;
 	adsp->qmp_name = desc->qmp_name;
 	adsp->dma_phys_below_32b = desc->dma_phys_below_32b;
 
@@ -1098,7 +1103,7 @@ static int adsp_probe(struct platform_device *pdev)
 		goto detach_proxy_pds;
 
 	ret = qcom_q6v5_init(&adsp->q6v5, pdev, rproc, desc->crash_reason_smem,
-			     qcom_pas_handover);
+	 desc->crash_reason_stack, desc->smem_host_id,  qcom_pas_handover);
 	if (ret)
 		goto detach_proxy_pds;
 
@@ -1261,6 +1266,8 @@ static const struct adsp_data neo_adsp_resource = {
 	.sysmon_name = "adsp",
 	.qmp_name = "adsp",
 	.ssctl_id = 0x14,
+	.crash_reason_stack = 660,
+	.smem_host_id = 2,
 };
 
 static const struct adsp_data anorak_adsp_resource = {
@@ -1423,6 +1430,8 @@ static const struct adsp_data neo_cdsp_resource = {
 	.sysmon_name = "cdsp",
 	.qmp_name = "cdsp",
 	.ssctl_id = 0x17,
+	.crash_reason_stack = 660,
+	.smem_host_id = 5,
 };
 
 static const struct adsp_data anorak_cdsp_resource = {
