@@ -102,7 +102,6 @@
 #define CORE_IO_PAD_PWR_SWITCH_EN	BIT(15)
 #define CORE_IO_PAD_PWR_SWITCH	BIT(16)
 #define CORE_HC_SELECT_IN_EN	BIT(18)
-#define CORE_HC_SELECT_IN_SDR50	(4 << 19)
 #define CORE_HC_SELECT_IN_HS400	(6 << 19)
 #define CORE_HC_SELECT_IN_MASK	(7 << 19)
 #define CORE_HC_SELECT_IN_SDR50	(4 << 19)
@@ -1325,8 +1324,8 @@ static int sdhci_msm_execute_tuning(struct mmc_host *mmc, u32 opcode)
 	if (ios.timing == MMC_TIMING_UHS_SDR50 &&
 			host->flags & SDHCI_SDR50_NEEDS_TUNING) {
 		config = readl_relaxed(host->ioaddr + msm_offset->core_vendor_spec);
-		config &= ~CORE_HC_SELECT_IN_MASK;
-		config |= CORE_HC_SELECT_IN_EN | CORE_HC_SELECT_IN_SDR50;
+		config |= CORE_HC_SELECT_IN_EN;
+		config |= CORE_HC_SELECT_IN_SDR50;
 		writel_relaxed(config, host->ioaddr + msm_offset->core_vendor_spec);
 	}
 
@@ -4675,97 +4674,6 @@ static int sdhci_msm_setup_clocks_and_bus(struct sdhci_msm_host *msm_host)
 	struct platform_device *pdev = msm_host->pdev;
 	struct clk *clk;
 	int ret;
-	u16 host_version, core_minor;
-	u32 core_version, config;
-	u8 core_major;
-	const struct sdhci_msm_offset *msm_offset;
-	const struct sdhci_msm_variant_info *var_info;
-	struct device_node *node = pdev->dev.of_node;
-	struct device *dev = &pdev->dev;
-#if IS_ENABLED(CONFIG_MMC_SDHCI_MSM_SCALING)
-	struct mmc_pwrseq *pwrseq_scale;
-#endif
-
-	host = sdhci_pltfm_init(pdev, &sdhci_msm_pdata, sizeof(*msm_host));
-	if (IS_ERR(host))
-		return PTR_ERR(host);
-
-	host->sdma_boundary = 0;
-	pltfm_host = sdhci_priv(host);
-	msm_host = sdhci_pltfm_priv(pltfm_host);
-	msm_host->mmc = host->mmc;
-	msm_host->pdev = pdev;
-
-	sdhci_msm_init_sysfs(dev);
-#if defined(CONFIG_SDHCI_MSM_DBG)
-	msm_host->dbg_en = true;
-#endif
-
-	msm_host->sdhci_msm_ipc_log_ctx = ipc_log_context_create(SDHCI_MSM_MAX_LOG_SZ,
-							dev_name(&host->mmc->class_dev), 0);
-	if (!msm_host->sdhci_msm_ipc_log_ctx)
-		dev_warn(dev, "IPC Log init - failed\n");
-
-	/**
-	 * System resume triggers a card detect interrupt even when there's no
-	 * card inserted. Core layer acquires the registered wakeup source for
-	 * 5s thus preventing system suspend for 5s at least.
-	 * Disable this wakesource until this is sorted out.
-	 */
-	if ((host->mmc->ws) && !(host->mmc->caps & MMC_CAP_NONREMOVABLE)) {
-		wakeup_source_unregister(host->mmc->ws);
-		host->mmc->ws = NULL;
-	}
-
-	ret = mmc_of_parse(host->mmc);
-	if (ret)
-		goto pltfm_free;
-
-	if (pdev->dev.of_node) {
-		ret = of_alias_get_id(pdev->dev.of_node, "mmc");
-		if (ret < 0)
-			dev_err(&pdev->dev, "get slot index failed %d\n", ret);
-		else if (ret <= 1)
-			sdhci_slot[ret] = msm_host;
-	}
-
-	/*
-	 * Based on the compatible string, load the required msm host info from
-	 * the data associated with the version info.
-	 */
-	var_info = of_device_get_match_data(&pdev->dev);
-
-	if (!var_info) {
-		dev_err(&pdev->dev, "Compatible string not found\n");
-		goto pltfm_free;
-	}
-
-	msm_host->mci_removed = var_info->mci_removed;
-	msm_host->restore_dll_config = var_info->restore_dll_config;
-	msm_host->var_ops = var_info->var_ops;
-	msm_host->offset = var_info->offset;
-
-	msm_offset = msm_host->offset;
-
-	sdhci_get_of_property(pdev);
-	sdhci_msm_get_of_property(pdev, host);
-
-	msm_host->saved_tuning_phase = INVALID_TUNING_PHASE;
-#if IS_ENABLED(CONFIG_SEC_MMC_FEATURE)
-	mmc_sec_save_tuning_phase(INVALID_TUNING_PHASE);
-#endif
-
-	ret = sdhci_msm_populate_pdata(dev, msm_host);
-	if (ret) {
-		dev_err(&pdev->dev, "DT parsing error\n");
-		goto pltfm_free;
-	}
-
-	sdhci_msm_gcc_reset(&pdev->dev, host);
-
-	msm_host->regs_restore.is_supported =
-		of_property_read_bool(dev->of_node,
-			"qcom,restore-after-cx-collapse");
 
 	/* Setup SDCC bus voter clock. */
 	msm_host->bus_clk = devm_clk_get(&pdev->dev, "bus");

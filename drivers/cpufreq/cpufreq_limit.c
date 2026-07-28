@@ -26,8 +26,6 @@
 #include <trace/hooks/cpufreq.h>
 
 #define MAX_BUF_SIZE	1024
-#define MIN(a, b)     (((a) < (b)) ? (a) : (b))
-#define MAX(a, b)     (((a) > (b)) ? (a) : (b))
 
 static unsigned int __read_mostly lpcharge;
 module_param(lpcharge, uint, 0444);

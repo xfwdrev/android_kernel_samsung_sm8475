@@ -31,9 +31,6 @@
 #define PRE_CC_ST_IBUS_OFFSET   150
 #define CC_ST_IBUS_OFFSET       100
 
-#define MAX(a, b)               ((a > b) ? (a):(b))
-#define MIN(a, b)               ((a < b) ? (a):(b))
-
 enum sm_dc_charging_loop {
 	LOOP_IBUSREG                = (0x1 << 7),
 	LOOP_IBATREG                = (0x1 << 5),
