@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  */
 
 #include <linux/delay.h>
@@ -1606,6 +1606,8 @@ static int cnss_do_recovery(struct cnss_plat_data *plat_priv,
 #ifdef CONFIG_SEC_SS_CNSS_FEATURE_SYSFS
 	cnss_pr_err("%s\n", ver_info);
 #endif
+	int ret;
+
 	plat_priv->recovery_count++;
 
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
@@ -1666,7 +1668,21 @@ self_recovery:
 		clear_bit(LINK_DOWN_SELF_RECOVERY,
 			  &plat_priv->ctrl_params.quirks);
 
-	cnss_bus_dev_powerup(plat_priv);
+	/* If link down self recovery is triggered before Host driver
+	 * registration, avoid device power up because eventually device
+	 * will be power up as part of driver registration.
+	 */
+
+	if (!test_bit(CNSS_DRIVER_REGISTER, &plat_priv->driver_state) ||
+	    !test_bit(CNSS_DRIVER_REGISTERED, &plat_priv->driver_state)) {
+		cnss_pr_dbg("Host driver not registered yet, ignore Device Power Up, 0x%lx\n",
+			    plat_priv->driver_state);
+		return 0;
+	}
+
+	ret = cnss_bus_dev_powerup(plat_priv);
+	if (ret)
+		clear_bit(CNSS_DRIVER_RECOVERY, &plat_priv->driver_state);
 
 	return 0;
 }

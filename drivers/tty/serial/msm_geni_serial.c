@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  */
 
 #include <linux/bitmap.h>
@@ -2416,7 +2417,8 @@ static void set_rfr_wm(struct msm_geni_serial_port *port)
 static void msm_geni_serial_shutdown(struct uart_port *uport)
 {
 	struct msm_geni_serial_port *msm_port = GET_DEV_PORT(uport);
-	int ret;
+	int ret, j = 0;
+	int usage_count = atomic_read(&uport->dev->power.usage_count);
 
 	UART_LOG_DBG(msm_port->ipc_log_misc, uport->dev, "%s:\n", __func__);
 	/* Stop the console before stopping the current tx */
@@ -2424,12 +2426,8 @@ static void msm_geni_serial_shutdown(struct uart_port *uport)
 		console_stop(uport->cons);
 		disable_irq(uport->irq);
 	} else {
-		if (!msm_port->is_clk_aon)
-			msm_geni_serial_power_on(uport, false);
-		ret = wait_for_transfers_inflight(uport);
-		if (ret)
-			UART_LOG_DBG(msm_port->ipc_log_misc, uport->dev,
-				  "%s wait_for_transfer_inflight return ret: %d", __func__, ret);
+		if (!usage_count)
+			msm_geni_serial_power_on(uport);
 
 		msm_geni_serial_stop_tx(uport);
 	}
