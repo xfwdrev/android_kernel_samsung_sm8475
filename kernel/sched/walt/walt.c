@@ -3166,9 +3166,11 @@ static void walt_update_tg_pointer(struct cgroup_subsys_state *css)
 
 	} else if (!strcmp(cur_cg->kn->name, "foreground")) {
 		walt_init_foreground_tg(css_tg(css));
-	else if (!strcmp(css->cgroup->kn->name, "foreground-boost"))
+	
+	} else if (!strcmp(css->cgroup->kn->name, "foreground-boost")) {
 		walt_init_foreground_tg(css_tg(css));
-	else
+	
+	} else {
 		walt_init_tg(css_tg(css));
 	}
 }
