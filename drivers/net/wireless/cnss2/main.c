@@ -60,8 +60,6 @@
 #define CNSS_CAL_START_PROBE_WAIT_RETRY_MAX 100
 #define CNSS_CAL_START_PROBE_WAIT_MS	500
 
-#define REBOOT_TIMEOUT_MS 30000
-
 enum cnss_cal_db_op {
 	CNSS_CAL_DB_UPLOAD,
 	CNSS_CAL_DB_DOWNLOAD,
@@ -1051,8 +1049,6 @@ int cnss_idle_restart(struct device *dev)
 		goto out;
 	}
 
-	clear_bit(CNSS_DRIVER_IDLE_RESTART, &plat_priv->driver_state);
-
 	mutex_unlock(&plat_priv->driver_ops_lock);
 	return 0;
 
@@ -1610,8 +1606,6 @@ static int cnss_do_recovery(struct cnss_plat_data *plat_priv,
 #ifdef CONFIG_SEC_SS_CNSS_FEATURE_SYSFS
 	cnss_pr_err("%s\n", ver_info);
 #endif
-	int ret;
-
 	plat_priv->recovery_count++;
 
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
@@ -1672,21 +1666,7 @@ self_recovery:
 		clear_bit(LINK_DOWN_SELF_RECOVERY,
 			  &plat_priv->ctrl_params.quirks);
 
-	/* If link down self recovery is triggered before Host driver
-	 * registration, avoid device power up because eventually device
-	 * will be power up as part of driver registration.
-	 */
-
-	if (!test_bit(CNSS_DRIVER_REGISTER, &plat_priv->driver_state) ||
-	    !test_bit(CNSS_DRIVER_REGISTERED, &plat_priv->driver_state)) {
-		cnss_pr_dbg("Host driver not registered yet, ignore Device Power Up, 0x%lx\n",
-			    plat_priv->driver_state);
-		return 0;
-	}
-
-	ret = cnss_bus_dev_powerup(plat_priv);
-	if (ret)
-		clear_bit(CNSS_DRIVER_RECOVERY, &plat_priv->driver_state);
+	cnss_bus_dev_powerup(plat_priv);
 
 	return 0;
 }
@@ -3171,32 +3151,6 @@ static ssize_t recovery_store(struct device *dev,
 	return count;
 }
 
-static void cnss_reboot_timeout_hdlr(struct timer_list *t)
-{
-	struct cnss_plat_data *plat_priv =
-		from_timer(plat_priv, t, reboot_timeout);
-
-	if (!plat_priv)
-		return;
-
-	/* Only clear CNSS_IN_REBOOT if we are not in the middle of
-	 * shutdown/power/recovery/suspend transitions, and at least one
-	 * liveness bit is set to indicate a sane runtime context.
-	 */
-	if (test_bit(CNSS_DRIVER_LOADING, &plat_priv->driver_state) ||
-	    test_bit(CNSS_DRIVER_RECOVERY, &plat_priv->driver_state) ||
-	    test_bit(CNSS_DRIVER_IDLE_RESTART, &plat_priv->driver_state) ||
-	    test_bit(CNSS_DEV_ERR_NOTIFY, &plat_priv->driver_state)) {
-		cnss_pr_dbg("Reboot timeout: transitional state active, keep CNSS_IN_REBOOT (state=0x%lx)\n",
-			    plat_priv->driver_state);
-		return;
-	}
-
-	clear_bit(CNSS_IN_REBOOT, &plat_priv->driver_state);
-	cnss_pr_dbg("Reboot timeout expired, CNSS_IN_REBOOT cleared (state=0x%lx)\n",
-		    plat_priv->driver_state);
-}
-
 static ssize_t shutdown_store(struct device *dev,
 			      struct device_attribute *attr,
 			      const char *buf, size_t count)
@@ -3208,11 +3162,6 @@ static ssize_t shutdown_store(struct device *dev,
 		del_timer(&plat_priv->fw_boot_timer);
 		complete_all(&plat_priv->power_up_complete);
 		complete_all(&plat_priv->cal_complete);
-		cnss_pr_dbg("Shutdown notification handled\n");
-
-		/* Start reboot timeout for 2 minutes */
-		mod_timer(&plat_priv->reboot_timeout,
-			  jiffies + msecs_to_jiffies(REBOOT_TIMEOUT_MS));
 	}
 
 	cnss_pr_dbg("Received shutdown notification\n");
@@ -3713,8 +3662,6 @@ static int cnss_reboot_notifier(struct notifier_block *nb,
 	struct cnss_plat_data *plat_priv =
 		container_of(nb, struct cnss_plat_data, reboot_nb);
 
-	cnss_pr_dbg("Reboot: (state=0x%lx)\n", plat_priv->driver_state);
-	del_timer(&plat_priv->reboot_timeout);
 	set_bit(CNSS_IN_REBOOT, &plat_priv->driver_state);
 	del_timer(&plat_priv->fw_boot_timer);
 	complete_all(&plat_priv->power_up_complete);
@@ -3734,8 +3681,6 @@ static int cnss_misc_init(struct cnss_plat_data *plat_priv)
 
 	timer_setup(&plat_priv->fw_boot_timer,
 		    cnss_bus_fw_boot_timeout_hdlr, 0);
-	timer_setup(&plat_priv->reboot_timeout,
-		    cnss_reboot_timeout_hdlr, 0);
 
 	ret = register_pm_notifier(&cnss_pm_notifier);
 	if (ret)
@@ -3791,7 +3736,6 @@ static void cnss_misc_deinit(struct cnss_plat_data *plat_priv)
 	unregister_reboot_notifier(&plat_priv->reboot_nb);
 	unregister_pm_notifier(&cnss_pm_notifier);
 	del_timer(&plat_priv->fw_boot_timer);
-	del_timer(&plat_priv->reboot_timeout);
 	wakeup_source_unregister(plat_priv->recovery_ws);
 	cnss_deinit_sol_gpio(plat_priv);
 	kfree(plat_priv->sram_dump);
