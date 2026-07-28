@@ -2427,7 +2427,7 @@ static void msm_geni_serial_shutdown(struct uart_port *uport)
 		disable_irq(uport->irq);
 	} else {
 		if (!usage_count)
-			msm_geni_serial_power_on(uport);
+			msm_geni_serial_power_on(uport, false);
 
 		msm_geni_serial_stop_tx(uport);
 	}
