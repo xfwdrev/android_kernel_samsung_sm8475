@@ -738,6 +738,11 @@ int sec_bat_parse_dt(struct device *dev,
 	if (ret)
 		pr_info("%s : lrp_temp_check_type is Empty\n", __func__);
 
+	if(pdata->lrp_temp_check_type != 0x00) {
+		pr_info("%s : disabling LRP for this board\n", __func__);
+		pdata->lrp_temp_check_type = SEC_BATTERY_TEMP_CHECK_NONE;
+	}
+
 	if (pdata->lrp_temp_check_type) {
 		for (i = 0; i < LRP_MAX; i++) {
 			if (sec_bat_parse_dt_lrp(battery, np, i) < 0) {
@@ -755,9 +760,10 @@ int sec_bat_parse_dt(struct device *dev,
 				pdata->lrp_curr[i].st_fcc[1] = pdata->default_charging_current;
 			}
 		}
-		pdata->sc_LRP_25W = of_property_read_bool(np,
-			"battery,sc_LRP_25W");
 	}
+
+	pdata->sc_LRP_25W = of_property_read_bool(np,
+		"battery,sc_LRP_25W");
 
 	if (pdata->chg_thm_info.check_type) {
 		ret = of_property_read_u32(np, "battery,chg_12v_high_temp",
