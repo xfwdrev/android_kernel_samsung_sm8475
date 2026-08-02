@@ -2102,7 +2102,7 @@ else
 # Jeston use absoulte objtree
 EXTRA_CFLAGS += -I$(src)/include/ -I$(src)/
 endif
-EXTRA_CFLAGS += $(call cc-option, -Wunused-but-set-variable)
+EXTRA_CFLAGS += $(call cc-option, -Wno-unused-but-set-variable)
 EXTRA_CFLAGS += $(call cc-option, -Wmaybe-uninitialized)
 KBUILD_CFLAGS += -I$(LINUXDIR)/include -I$(CURDIR)
 
