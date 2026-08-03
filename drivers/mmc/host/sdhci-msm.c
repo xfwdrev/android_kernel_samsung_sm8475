@@ -5039,6 +5039,9 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	sdhci_msm_get_of_property(pdev, host);
 
 	msm_host->saved_tuning_phase = INVALID_TUNING_PHASE;
+#if IS_ENABLED(CONFIG_SEC_MMC_FEATURE)
+	mmc_sec_save_tuning_phase(INVALID_TUNING_PHASE);
+#endif
 
 	ret = sdhci_msm_populate_pdata(dev, msm_host);
 	if (ret) {
