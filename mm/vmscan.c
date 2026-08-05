@@ -1979,7 +1979,8 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
 						     struct list_head *list)
 {
 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
-	int nr_pages, nr_moved = 0;
+	int nr_pages = 0;
+	int nr_moved = 0;
 	LIST_HEAD(pages_to_free);
 	struct page *page;
 
