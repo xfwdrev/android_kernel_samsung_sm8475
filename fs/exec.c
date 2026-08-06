@@ -67,7 +67,6 @@
 #ifdef CONFIG_KSU_SUSFS
 #include <linux/susfs_def.h>
 #endif
-#include <linux/task_integrity.h>
 
 #include <linux/uaccess.h>
 #include <asm/mmu_context.h>
@@ -1770,8 +1769,6 @@ static int exec_binprm(struct linux_binprm *bprm)
 		if (depth > 5)
 			return -ELOOP;
 
-		five_bprm_check(bprm, depth);
-
 		ret = search_binary_handler(bprm);
 		if (ret < 0)
 			return ret;
@@ -1857,10 +1854,8 @@ static int bprm_execve(struct linux_binprm *bprm,
 		goto out;
 
 	retval = exec_binprm(bprm);
-	if (retval < 0) {
-		task_integrity_delayed_reset(current, CAUSE_EXEC, bprm->file);
+	if (retval < 0)
 		goto out;
-	}
 
 	/* execve succeeded */
 	current->fs->in_exec = 0;

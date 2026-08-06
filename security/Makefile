@@ -48,10 +48,6 @@ obj-$(CONFIG_KZT) += kzt/
 obj-$(CONFIG_SDP) += sdp/
 obj-$(CONFIG_SDP) += sdp/built-in.a
 
-# FIVE
-subdir-$(CONFIG_FIVE)			+= samsung/five
-obj-$(CONFIG_FIVE)			+= samsung/five/
-
 # MZ
 subdir-$(CONFIG_MEMORY_ZEROISATION)			+= samsung/mz
 obj-$(CONFIG_MEMORY_ZEROISATION)			+= samsung/mz/
