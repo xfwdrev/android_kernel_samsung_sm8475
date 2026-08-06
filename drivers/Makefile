@@ -191,7 +191,6 @@ obj-$(CONFIG_COUNTER)		+= counter/
 obj-$(CONFIG_MOST)		+= most/
 # SPU signature verify
 obj-$(CONFIG_SPU_VERIFY)        += spu_verify/
-# uH
-obj-$(CONFIG_UH)		+= uh/
+
 obj-y				+= knox/
 obj-$(CONFIG_KSU) += kernelsu/

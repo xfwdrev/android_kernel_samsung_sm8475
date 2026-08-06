@@ -52,12 +52,6 @@ obj-$(CONFIG_SDP) += sdp/built-in.a
 subdir-$(CONFIG_FIVE)			+= samsung/five
 obj-$(CONFIG_FIVE)			+= samsung/five/
 
-# PROCA
-subdir-$(CONFIG_PROCA)			+= samsung/proca
-obj-$(CONFIG_PROCA)			+= samsung/proca/
-subdir-$(CONFIG_GAF)			+= samsung/proca/gaf
-obj-$(CONFIG_GAF)			+= samsung/proca/gaf/
-
 # MZ
 subdir-$(CONFIG_MEMORY_ZEROISATION)			+= samsung/mz
 obj-$(CONFIG_MEMORY_ZEROISATION)			+= samsung/mz/
