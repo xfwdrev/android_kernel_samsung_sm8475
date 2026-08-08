@@ -179,7 +179,7 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 		audit_log(audit_context(), GFP_KERNEL, AUDIT_MAC_STATUS,
 			"enforcing=%d old_enforcing=%d auid=%u ses=%u"
 			" enabled=1 old-enabled=1 lsm=selinux res=1",
-			new_value, selinux_enforcing, // SEC_SELINUX_PORTING_COMMON Change to use RKP 
+			new_value, old_value,
 			from_kuid(&init_user_ns, audit_get_loginuid(current)),
 			audit_get_sessionid(current));
 		enforcing_set(state, new_value);
@@ -2221,11 +2221,6 @@ static int __init init_sel_fs(void)
 	struct qstr null_name = QSTR_INIT(NULL_FILE_NAME,
 					  sizeof(NULL_FILE_NAME)-1);
 	int err;
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-	selinux_enabled = 1;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON
 
 	if (!selinux_enabled_boot)
 		return 0;
