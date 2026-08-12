@@ -2,3 +2,11 @@
 # commonly used symbols
   module_layout
   __put_task_struct
+
+# required by msm_sysstats.ko
+from_kuid_munged
+
+# required by rmnet_shs.ko
+init_user_ns
+make_kgid
+make_kuid
