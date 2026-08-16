@@ -129,5 +129,5 @@
 
 #if __has_feature(kcfi)
 /* Disable CFI checking inside a function. */
-#define function_nocfi(x)	__builtin_function_start(x)
+#define __nocfi		__attribute__((__no_sanitize__("kcfi")))
 #endif
