@@ -2501,7 +2501,7 @@ static void __dwc3_gadget_set_speed(struct dwc3 *dwc)
 static int dwc3_gadget_run_stop(struct dwc3 *dwc, int is_on)
 {
 	u32			reg;
-	u32			timeout = 2000;
+	u32			timeout = 500;
 
 	if (pm_runtime_suspended(dwc->dev))
 		return 0;
@@ -2528,7 +2528,6 @@ static int dwc3_gadget_run_stop(struct dwc3 *dwc, int is_on)
 	dwc3_gadget_dctl_write_safe(dwc, reg);
 
 	do {
-		usleep_range(1000, 2000);
 		reg = dwc3_readl(dwc->regs, DWC3_DSTS);
 		reg &= DWC3_DSTS_DEVCTRLHLT;
 	} while (--timeout && !(!is_on ^ !reg));
