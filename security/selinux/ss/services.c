@@ -4168,7 +4168,7 @@ static int susfs_security_context_to_sid_core(struct selinux_state *state,
 	if (!selinux_initialized(state)) {
 		int i;
 
-		for (i = 1; i < SECINITSID_NUM; i) {
+		for (i = 1; i < SECINITSID_NUM; i++) {
 			const char *s = initial_sid_to_string[i];
 
 			if (s && !strcmp(s, scontext2)) {
@@ -4197,7 +4197,7 @@ retry:
 				      &context, def_sid);
 	if (rc == -EINVAL && force) {
 		context.str = str;
-		context.len = strlen(str)  1;
+		context.len = strlen(str) + 1;
 		str = NULL;
 	} else if (rc)
 		goto out_unlock;

@@ -86,7 +86,7 @@ int statfs_by_dentry_wrapper(struct dentry *dentry, struct kstatfs *buf){
 	return statfs_by_dentry(dentry, buf);
 }
 
-int susfs_calculate_f_flags_wrapper(struct vfsmount *mnt)
+int calculate_f_flags_wrapper(struct vfsmount *mnt)
 {
 	return calculate_f_flags(mnt);
 }
